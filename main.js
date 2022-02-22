@@ -8,25 +8,44 @@ class Block{
     // the properties of each block
     // data is the information of the transcation ex: how much was transfered and the people involved in it
     // previousHash is the hash of the block before the current block in the blockchain, this is for integrity
+    // adding a property called nonce to change the block, random number that has nothing to do with the block but can be changed to any random number
     constructor(index, timestamp, data, previousHash = ''){
         this.index = index;
         this.timestamp = timestamp;
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
+        this.nonce = 0;
     }
 
     // calculates the hash of the block with the blocks properties and returns a string
     calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        // adds the nonce to the creation of the hash
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    // mines the next block
+    // this creates and increases the difficulty for each new block that is mined. adds a certain amount of zeros to the beginning of the has based on the difficulty
+    mineBlock(difficulty){
+        // substring adds the certain amount of zeros to the beginning of the hash based on the difficulty
+        // compares it to the array with the same amount of zeros
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")){
+            this.nonce++;
+            this.hash = this.calculateHash();
+        }
+
+        // outputs the hash of the block that is just mined
+        console.log("Block mined: " + this.hash);
     }
 }
 
 // creates a new block in the blockchain
 class Blockchain{
+    // this is the array of blocks which represent the blockchain which creates the very first block in the blockchain, the genesis block. any other blocks that are going to be made are appened to this array
+    // added the difficulty here for future reasons
     constructor(){
-        // this is the array of blocks which represent the blockchain which creates the very first block in the blockchain, the genesis block. any other blocks that are going to be made are appened to this array
         this.chain = [this.createGenesisBlock()];
+        this.difficulty = 5;
     }
 
     // the first block in the blockchain
@@ -44,8 +63,8 @@ class Blockchain{
     addBlock(newBlock){
         // sets the previousHash to the latest block is the blockchain hash
         newBlock.previousHash = this.getLatestBlock().hash;
-        // creates a new block in the blockchain whenever some properties are changed in the block
-        newBlock.hash = newBlock.calculateHash();
+        // mines the block based on w/e the difficulty is set to
+        newBlock.mineBlock(this.difficulty);
         // pushs the newest block that was just made to the blockchain
         this.chain.push(newBlock);
     }
@@ -76,25 +95,13 @@ class Blockchain{
 
 // the instance of the new blockchain
 let mikeCoin = new Blockchain();
+
+console.log('Mining Block 1...');
 // creates a block: the index, timestamp, and the data object with all the details of the block
 mikeCoin.addBlock(new Block(1, "10/07/2017", {amount: 4}));
+
+console.log('Mining Block 2...');
 // creates a block: the index, timestamp, and the data object with all the details of the block
 mikeCoin.addBlock(new Block(2, "12/07/2017", {amount: 10}));
-
-// prints the blockchain with the new blocks added above
-// console.log(JSON.stringify(mikeCoin, null, 4));
-
-// returns true
-console.log('Is blockchain valid? ' + mikeCoin.isChainValid());
-
-// try to change the amount of coins transfered on the first block, returns false
-mikeCoin.chain[1].data = { amount: 100 };
-// try to change the hash on the first blocks hash, returns false
-mikeCoin.chain[1].hash = mikeCoin.chain[1].calculateHash();
-
-// returns false because we have tried to change the block/blockchain
-console.log('Is blockchain valid? ' + mikeCoin.isChainValid());
-
-// console.log(JSON.stringify(mikeCoin, null, 4));
 
 // to run open up the console and type 'node main.js'
