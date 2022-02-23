@@ -1,6 +1,8 @@
 // import the the sha256 library to create hashes for each block in the blockchain
 const SHA256 = require("crypto-js/sha256");
+// this library allows the creation of private and public keys as well as methods to sign and verify signatures
 const EC = require('elliptic').ec;
+// this is the same algorithm for BTC wallets
 const ec = new EC('secp256k1');
 
 // creating a class for the transaction
@@ -11,11 +13,15 @@ class Transaction{
         this.amount = amount;
     }
 
+    // this will return the SHA256 of the transaction
+    // this hash is going to be signed with the private key
+    // just signing the hash
     calculateHash(){
         return SHA256(this.fromAddress + this.toAddress + this.amount)
                     .toString();
     }
 
+    // if we want to sign a transaction we need to give it our private and public key pair
     signTransaction(signingKey){
 
         // You can only send a transaction from the wallet that is linked to your
@@ -85,6 +91,7 @@ class Block {
         console.log("BLOCK MINED: " + this.hash);
     }
 
+    // verifies every transaction in the block in the blockchain
     verifyTransactionsInBlock(){
         for(const tx of this.transactions){
             if(!tx.isValid()){
@@ -205,5 +212,6 @@ class Blockchain{
     }
 }
 
+// exports each class
 module.exports.Blockchain = Blockchain;
 module.exports.Transaction = Transaction;
